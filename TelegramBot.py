@@ -154,8 +154,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     messages=[
                         {
                             "role" : "system",
-                            "content" : "You are a Telegram bot that replies to messages on my behalf. The following message will be the last 3 messages sent to me including my response, only reply to questions that you or I haven't responded yet. If you are asked how you are just reply with positively and ask them the same. Remember you must reply as if you are me a human being"
-                            },
+                            "content" : "You are a Telegram bot responding to messages on my behalf. You will receive the last three messages in a conversation. Only reply to questions that neither you (as the assistant) nor I (LouTheWolf) have previously answered. If asked how you are, respond with 'positively.' Always reply as if you are me, a human being."},
                         {
                             "role" : "user",
                             "content" : message_string
@@ -184,7 +183,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 import os
 
-def add_chat_history(update, botresponse=None):
+def add_chat_history(update, botresponse:str=None):
     file_path = f"{os.path.curdir}/files/{update.business_message.chat_id}.txt"
     
     # Ensure directory exists
@@ -197,9 +196,9 @@ def add_chat_history(update, botresponse=None):
         chatHistory = []
     
     # Update chat history
-    chatHistory.append(update.business_message.text + f" - {update.business_message.date} - {update.business_message.from_user.username}")
+    chatHistory.append(update.business_message.text.strip().replace("\n","") + f" - {update.business_message.date} - {update.business_message.from_user.username}")
     if botresponse is not None:
-        chatHistory.append(f"{botresponse} - {update.business_message.date} - assistant")
+        chatHistory.append(f"{botresponse.strip().replace("\n","")} - {update.business_message.date} - assistant")
     
     # Limit to last 3 messages
     chatHistory = chatHistory[-3:]
