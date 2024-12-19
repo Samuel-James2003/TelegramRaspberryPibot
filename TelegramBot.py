@@ -75,7 +75,7 @@ def isAnInt(value):
     except ValueError:
         return False
 
-def read_list_from_file(file_path:str):
+def read_list_from_file(file_path: str):
     """
     Reads a list of items from a file. Each line in the file is treated as one item in the list.
     
@@ -83,13 +83,17 @@ def read_list_from_file(file_path:str):
     :return: A list of items read from the file.
     """
     try:
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        
         with open(file_path, 'r', encoding='utf-8') as file:
             # Strip whitespace/newlines and return as a list
             return [line.strip() for line in file.readlines()]
     except FileNotFoundError:
-         with open(file_path, 'a', encoding='utf-8') as file:
-            file.close()
-            return []
+        # If the file doesn't exist, create it and return an empty list
+        with open(file_path, 'a', encoding='utf-8') as file:
+            pass
+        return []
     except Exception as e:
         print(f"An error occurred: {e}")
         return []
@@ -150,7 +154,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     messages=[
                         {
                             "role" : "system",
-                            "content" : "You are a Telegram bot that replies to messages on my behalf. The following message will be the last 3 messages sent to me including my response. If you are asked how you are just reply with positively and ask them the same. You must reply as if you are me"
+                            "content" : "You are a Telegram bot that replies to messages on my behalf. The following message will be the last 3 messages sent to me including my response, only reply to questions that you or I haven't responded yet. If you are asked how you are just reply with positively and ask them the same. Remember you must reply as if you are me a human being"
                             },
                         {
                             "role" : "user",
