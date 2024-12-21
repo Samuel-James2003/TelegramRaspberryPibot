@@ -198,7 +198,7 @@ def add_chat_history(update, botresponse:str=None):
     # Update chat history
     chatHistory.append(update.business_message.text.strip().replace("\n","") + f" - {update.business_message.date} - {update.business_message.from_user.username}")
     if botresponse is not None:
-        chatHistory.append(f"{botresponse.strip().replace('\n','')} - {update.business_message.date} - assistant")
+        chatHistory.append(botresponse.strip().replace('\n','') + f"- {update.business_message.date} - assistant")
     
     # Limit to last 3 messages
     chatHistory = chatHistory[-3:]
