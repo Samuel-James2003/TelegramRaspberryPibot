@@ -4,9 +4,9 @@ import cohere
 import os
 
 
-api_key=os.getenv('COHERE_TOKEN')
-co = cohere.ClientV2(api_key)
+API_KEY=os.getenv('COHERE_TOKEN')
 BOT_TOKEN = os.getenv('BOT_TOKEN')
+co = cohere.ClientV2(API_KEY)
 
 # Function to handle the /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
