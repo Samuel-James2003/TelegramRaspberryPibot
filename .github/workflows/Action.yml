@@ -21,7 +21,8 @@ jobs:
 
     - name: Deploy to Raspberry Pi
       run: |
-        ssh -o StrictHostKeyChecking=no samuel@192.168.68.119"
+        ssh -o StrictHostKeyChecking=no samuel@192.168.68.119
+        "
         cd /home/samuel/TelegramRaspberryPibot &&
         git pull &&
         ./restart.sh
