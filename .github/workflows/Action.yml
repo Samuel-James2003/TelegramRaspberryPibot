@@ -22,8 +22,6 @@ jobs:
     - name: Deploy to Raspberry Pi
       run: |
         ${{ vars.SSH_COMMAND }}
-        "
         cd /home/samuel/TelegramRaspberryPibot &&
         git pull &&
         ./restart.sh
-        "
