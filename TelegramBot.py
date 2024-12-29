@@ -172,13 +172,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return
         else:
             #the user is not (yet) allowed
-            await context.bot.send_message(chat_id=GetAdmins()[0], text=f"The current chat is not initialized. Please add the following ID to your list of approved IDs ```{update.business_message.chat_id}```")
+            await context.bot.send_message(chat_id=GetAdmins()[0], text=f"The current chat is not initialized. Please add the following ID to your list of approved IDs `{update.business_message.chat_id}`")
             return
     if update.message is not None and update.message.text is not None:
         # A direct message to the bot 
         if update.message.forward_origin is not None:
             #Its a forwarded message
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Hi, I see you forwarded this from @{update.message.forward_origin.sender_user.username} - ```{update.message.forward_origin.sender_user.id}```")
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Hi, I see you forwarded this from @{update.message.forward_origin.sender_user.username} - `{update.message.forward_origin.sender_user.id}`")
             return
 
 import os
