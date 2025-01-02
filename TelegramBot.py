@@ -40,11 +40,54 @@ async def addChat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await context.bot.send_message(chat_id=GetAdmins()[0], text=f"Failed to add chat: {e}")
     return
-def WriteChats(chats: list[str]):
-    write_list_to_file(os.path.curdir + "/files/chat.txt", chats)
 
-def GetChats():
-    return read_list_from_file(os.path.curdir + "/files/chat.txt")
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        if update.business_message is not None and update.business_message.text is not None:
+            # Get the business message
+            if verify_permissions(update.business_message.chat_id, "chat"):
+                #the chat is in the list of allowed chats
+                if update.business_message.from_user.id == update.business_message.chat_id:
+                    #the user is not the sender
+                    previous_messages = read_list_from_file(f"{os.path.curdir}/files/{update.business_message.chat_id}.txt")
+                    # Create a list of system-role messages from previous conversation history
+                    cohere_messages = [
+                        {"role": "system", "content": "You are a Telegram bot responding to messages on my behalf. You will receive the last three messages in a conversation. Only reply to questions that neither you (as the assistant) nor I (LouTheWolf) have previously answered. If asked how you are, respond with 'positively.' Always reply as if you are me, a human being."}]
+                    # Add each previous message as a system-role message
+                    for message in previous_messages:
+                        cohere_messages.append({"role": "system", "content": message})
+                    # Add the latest user message
+                    new_message = f"{update.business_message.text} - {update.business_message.date} - {update.business_message.from_user.username}"
+                    cohere_messages.append({"role": "user", "content": new_message})
+                    # Send the messages to Cohere API
+                    res = co.chat(
+                        model="command-r7b-12-2024",
+                        messages=cohere_messages
+                        )
+                    response_message = res.message.content[0].text
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text=response_message, 
+                        business_connection_id=update.business_message.business_connection_id)
+                    add_chat_history(update,response_message)
+                    return
+                else:
+                    #the user is the sender
+                    add_chat_history(update)
+                    return
+            else:
+                #the user is not (yet) allowed
+                await context.bot.send_message(chat_id=GetAdmins()[0], text=f"The current chat is not initialized\. Please add the following ID to your list of approved IDs `{update.business_message.chat_id}`",parse_mode="MarkdownV2")
+                return
+        if update.message is not None and update.message.text is not None:
+            # A direct message to the bot 
+            if update.message.forward_origin is not None:
+                #Its a forwarded message
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Hi, I see you forwarded this from @{update.message.forward_origin.sender_user.username} \- `{update.message.forward_origin.sender_user.id}`",parse_mode="MarkdownV2")
+                return
+    except Exception as e:
+        await context.bot.send_message(chat_id=GetAdmins()[0], text=f"Failed to handle message: {e}")
+    return
 
 async def addAdmin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -68,6 +111,12 @@ async def addAdmin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await context.bot.send_message(chat_id=GetAdmins()[0], text=f"Failed to add admin: {e}")
         return
+
+def WriteChats(chats: list[str]):
+    write_list_to_file(os.path.curdir + "/files/chat.txt", chats)
+
+def GetChats():
+    return read_list_from_file(os.path.curdir + "/files/chat.txt")
 
 def WriteAdmins(admins):
     write_list_to_file(os.path.curdir + "/files/admin.txt",admins)
@@ -146,54 +195,7 @@ def verify_permissions(ID:str, level:str):
 
 def GetUsers():
     return read_list_from_file(os.path.curdir + "/files/user.txt")
-# Function to handle any random message
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        if update.business_message is not None and update.business_message.text is not None:
-            # Get the business message
-            if verify_permissions(update.business_message.chat_id, "chat"):
-                #the chat is in the list of allowed chats
-                if update.business_message.from_user.id == update.business_message.chat_id:
-                    #the user is not the sender
-                    previous_messages = read_list_from_file(f"{os.path.curdir}/files/{update.business_message.chat_id}.txt")
-                    # Create a list of system-role messages from previous conversation history
-                    cohere_messages = [
-                        {"role": "system", "content": "You are a Telegram bot responding to messages on my behalf. You will receive the last three messages in a conversation. Only reply to questions that neither you (as the assistant) nor I (LouTheWolf) have previously answered. If asked how you are, respond with 'positively.' Always reply as if you are me, a human being."}]
-                    # Add each previous message as a system-role message
-                    for message in previous_messages:
-                        cohere_messages.append({"role": "system", "content": message})
-                    # Add the latest user message
-                    new_message = f"{update.business_message.text} - {update.business_message.date} - {update.business_message.from_user.username}"
-                    cohere_messages.append({"role": "user", "content": new_message})
-                    # Send the messages to Cohere API
-                    res = co.chat(
-                        model="command-r7b-12-2024",
-                        messages=cohere_messages
-                        )
-                    response_message = res.message.content[0].text
-                    await context.bot.send_message(
-                        chat_id=update.effective_chat.id,
-                        text=response_message, 
-                        business_connection_id=update.business_message.business_connection_id)
-                    add_chat_history(update,response_message)
-                    return
-                else:
-                    #the user is the sender
-                    add_chat_history(update)
-                    return
-            else:
-                #the user is not (yet) allowed
-                await context.bot.send_message(chat_id=GetAdmins()[0], text=f"The current chat is not initialized\. Please add the following ID to your list of approved IDs `{update.business_message.chat_id}`",parse_mode="MarkdownV2")
-                return
-        if update.message is not None and update.message.text is not None:
-            # A direct message to the bot 
-            if update.message.forward_origin is not None:
-                #Its a forwarded message
-                await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Hi, I see you forwarded this from @{update.message.forward_origin.sender_user.username} \- `{update.message.forward_origin.sender_user.id}`",parse_mode="MarkdownV2")
-                return
-    except Exception as e:
-        await context.bot.send_message(chat_id=GetAdmins()[0], text=f"Failed to handle message: {e}")
-    return
+
 def add_chat_history(update, botresponse:str=None):
         file_path = f"{os.path.curdir}/files/{update.business_message.chat_id}.txt"
         
@@ -216,8 +218,7 @@ def add_chat_history(update, botresponse:str=None):
         
         # Write updated history back to file
         write_list_to_file(file_path, chatHistory)
-
-    
+  
 def main():
     # Create the application with your bot's token
     app = Application.builder().token(BOT_TOKEN).build()
