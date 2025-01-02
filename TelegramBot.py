@@ -181,7 +181,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # A direct message to the bot 
         if update.message.forward_origin is not None:
             #Its a forwarded message
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Hi, I see you forwarded this from @{update.message.forward_origin.sender_user.username} - `{update.message.forward_origin.sender_user.id}`",parse_mode="MarkdownV2")
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Hi, I see you forwarded this from @{update.message.forward_origin.sender_user.username} \- `{update.message.forward_origin.sender_user.id}`",parse_mode="MarkdownV2")
             return
 
 import os
