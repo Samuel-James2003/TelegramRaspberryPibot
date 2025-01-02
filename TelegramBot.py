@@ -175,7 +175,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return
         else:
             #the user is not (yet) allowed
-            await context.bot.send_message(chat_id=GetAdmins()[0], text="The current chat is not initialized. Please add the following ID to your list of approved IDs `" + update.business_message.chat_id + "`")
+            await context.bot.send_message(chat_id=GetAdmins()[0], text="The current chat is not initialized. Please add the following ID to your list of approved IDs `" + str(update.business_message.chat_id) + "`")
             return
     if update.message is not None and update.message.text is not None:
         # A direct message to the bot 
