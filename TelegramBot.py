@@ -147,18 +147,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             #the chat is in the list of allowed chats
             if update.business_message.from_user.id == update.business_message.chat_id:
                 #the user is not the sender
-                message_string = "\n".join(read_list_from_file(f"{os.path.curdir}/files/{update.business_message.chat_id}.txt"))
-                message_string += (f"\n{update.business_message.text} - {update.business_message.date} - {update.business_message.from_user.username}")
+                previous_messages = read_list_from_file(f"{os.path.curdir}/files/{update.business_message.chat_id}.txt")
+                # Create a list of system-role messages from previous conversation history
+                cohere_messages = [
+                    {"role": "system", "content": "You are a Telegram bot responding to messages on my behalf. You will receive the last three messages in a conversation. Only reply to questions that neither you (as the assistant) nor I (LouTheWolf) have previously answered. If asked how you are, respond with 'positively.' Always reply as if you are me, a human being."}]
+                # Add each previous message as a system-role message
+                for message in previous_messages:
+                    cohere_messages.append({"role": "system", "content": message})
+                # Add the latest user message
+                new_message = f"{update.business_message.text} - {update.business_message.date} - {update.business_message.from_user.username}"
+                cohere_messages.append({"role": "user", "content": new_message})
+                # Send the messages to Cohere API
                 res = co.chat(
                     model="command-r7b-12-2024",
-                    messages=[
-                        {
-                            "role" : "system",
-                            "content" : "You are a Telegram bot responding to messages on my behalf. You will receive the last three messages in a conversation. Only reply to questions that neither you (as the assistant) nor I (LouTheWolf) have previously answered. If asked how you are, respond with 'positively.' Always reply as if you are me, a human being."},
-                        {
-                            "role" : "user",
-                            "content" : message_string
-                            }])
+                    messages=cohere_messages
+                    )
                 response_message = res.message.content[0].text
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
