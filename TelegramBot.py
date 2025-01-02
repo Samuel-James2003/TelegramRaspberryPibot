@@ -52,7 +52,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     previous_messages = read_list_from_file(f"{os.path.curdir}/files/{update.business_message.chat_id}.txt")
                     # Create a list of system-role messages from previous conversation history
                     cohere_messages = [
-                        {"role": "system", "content": "You are a Telegram bot responding to messages on my behalf. You will receive the last three messages in a conversation. Only reply to questions that neither you (as the assistant) nor I (LouTheWolf) have previously answered. If asked how you are, respond with 'positively.' Always reply as if you are me, a human being."}]
+                        {"role": "system", "content": "You are a Telegram bot responding to messages on my behalf. You will receive the last three messages in a conversation. Only reply to messages that neither you (as the assistant) nor I (LouTheWolf) have previously answered. Do not respond with a timestamp or username. Always reply as if you are me, a human being."}]
                     # Add each previous message as a system-role message
                     for message in previous_messages:
                         cohere_messages.append({"role": "system", "content": message})
