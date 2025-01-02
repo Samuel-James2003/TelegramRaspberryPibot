@@ -55,7 +55,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         {"role": "system", "content": "You are a Telegram bot responding to messages on my behalf. You will receive the last three messages in a conversation. Only reply to messages that neither you (as the assistant) nor I (LouTheWolf) have previously answered. Do not respond with a timestamp or username. Always reply as if you are me, a human being."}]
                     # Add each previous message as a system-role message
                     for message in previous_messages:
-                        cohere_messages.append({"role": "system", "content": message})
+                        parts = message.rsplit(" - ", 1)
+                        content = "".join(parts[:-1])
+                        role = parts[-1] if len(parts) > 1 else "system"
+                        cohere_messages.append({"role": role, "content": content})
                     # Add the latest user message
                     new_message = f"{update.business_message.text} - {update.business_message.date} - {update.business_message.from_user.username}"
                     cohere_messages.append({"role": "user", "content": new_message})
@@ -209,9 +212,9 @@ def add_chat_history(update, botresponse:str=None):
             chatHistory = []
         
         # Update chat history
-        chatHistory.append(update.business_message.text.strip().replace("\n","") + f" - {update.business_message.date} - {update.business_message.from_user.username}")
+        chatHistory.append(update.business_message.text.strip().replace("\n","") + f" - {update.business_message.from_user.username}")
         if botresponse is not None:
-            chatHistory.append(botresponse.strip().replace('\n','') + f"- {update.business_message.date} - assistant")
+            chatHistory.append(botresponse.strip().replace('\n','') + f" - assistant")
         
         # Limit to last 3 messages
         chatHistory = chatHistory[-3:]
