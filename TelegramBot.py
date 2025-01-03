@@ -1,5 +1,6 @@
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackContext
+import logging
 import cohere
 import os
 
@@ -127,6 +128,35 @@ async def addAdmin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=GetAdmins()[0], text=f"Failed to add admin: {e}")
         return
 
+async def error_handler(update: Update, context: CallbackContext) -> None:
+    # Extract information about the update and the error
+    update_info = update.to_dict() if update else "No update data"
+    error_info = str(context.error)
+
+    # Log the detailed error
+    logging.error(f"Update caused an error: {update_info}\nError: {error_info}")
+
+    # Optionally, inform the user
+    if update and update.effective_message:
+        await update.effective_message.reply_text("Oops! Something went wrong.")
+        
+async def listChat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    userID = update.effective_user.id
+    if not verify_permissions(userID, "admin"):
+        await context.bot.send_message(chat_id=userID, text="Current user does not have sufficient permissions.")
+        return
+    chats = GetChats()
+    chat_list = "\n".join(chats)
+    await context.bot.send_message(chat_id=userID, text=f"Current active chats:\n{chat_list}")
+async def listadmin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    userID = update.effective_user.id
+    if not verify_permissions(userID, "admin"):
+        await context.bot.send_message(chat_id=userID, text="Current user does not have sufficient permissions.")
+        return
+    admins = GetAdmins()
+    admin_list = "\n".join(admins)
+    await context.bot.send_message(chat_id=userID, text=f"Current admins:\n{admin_list}")
+
 def WriteChats(chats: list[str]):
     write_list_to_file(os.path.curdir + "/files/chat.txt", chats)
 
@@ -233,7 +263,7 @@ def add_chat_history(update, botresponse:str=None):
         
         # Write updated history back to file
         write_list_to_file(file_path, chatHistory)
-  
+
 def main():
     # Create the application with your bot's token
     app = Application.builder().token(BOT_TOKEN).build()
@@ -247,6 +277,14 @@ def main():
     # Add a CommandHandler for the /addAdmin command
     app.add_handler(CommandHandler("addadmin", addAdmin))
     
+    # Add a CommandHandler for the /listchat command
+    app.add_handler(CommandHandler("listchat", listChat))
+    
+    # Add a CommandHandler for the /listadmin command
+    app.add_handler(CommandHandler("listadmin", listadmin))
+    
+    app.add_error_handler(error_handler)
+        
     # Add a MessageHandler for handling any  message
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
