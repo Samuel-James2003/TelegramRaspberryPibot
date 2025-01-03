@@ -52,22 +52,34 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     previous_messages = read_list_from_file(f"{os.path.curdir}/files/{update.business_message.chat_id}.txt")
                     # Create a list of system-role messages from previous conversation history
                     cohere_messages = [
-                        {"role": "system", "content": "You are a Telegram bot responding to messages on my behalf. You will receive the last three messages in a conversation. Only reply to messages that neither you (as the assistant) nor I (LouTheWolf) have previously answered. Do not respond with a timestamp or username. Always reply as if you are me, a human being."}]
+                        {"role": "system", "content": """You are my Telegram chat responder. Your role is to respond to messages on my behalf in a way that mimics my personality and communication style. You'll receive the last three messages for context.
+                         **Guidelines for responses:**
+                         1. Maintain a casual/friendly tone.
+                         2. Adapt to the conversation's mood—light-hearted, serious, or neutral.
+                         3. If the message is unclear, respond with a clarifying question or an appropriate fallback response.
+                         4. Ensure replies feel human, avoid robotic phrasing, and personalize them as much as possible.
+                         5. If you’re unsure about a specific technical or situational detail, acknowledge it with an offer to follow up later or a generic yet relevant response.
+                         6. Do NOT end your responses with '- [my name]' or any other signature.
+                         Always remember: You are speaking as me, not as a bot, so prioritize authenticity and relatability.
+                         """}]
                     # Add each previous message as a system-role message
                     for message in previous_messages:
                         parts = message.rsplit(" - ", 1)
-                        content = "".join(parts[:-1])
-                        role = parts[-1] if len(parts) > 1 else "system"
-                        cohere_messages.append({"role": role, "content": content})
+                        if "assistant" in parts[-1]:
+                            role = "assistant"
+                            message = "".join(parts[:-1])
+                        else:
+                            role = "user"
+                        cohere_messages.append({"role": role, "content": message})
                     # Add the latest user message
-                    new_message = f"{update.business_message.text} - {update.business_message.date} - {update.business_message.from_user.username}"
+                    new_message = f"{update.business_message.text} - {update.business_message.from_user.username}"
                     cohere_messages.append({"role": "user", "content": new_message})
                     # Send the messages to Cohere API
                     res = co.chat(
                         model="command-r7b-12-2024",
                         messages=cohere_messages
                         )
-                    response_message = res.message.content[0].text
+                    response_message = res.message.content[0].text                    
                     await context.bot.send_message(
                         chat_id=update.effective_chat.id,
                         text=response_message, 
